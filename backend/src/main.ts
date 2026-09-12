@@ -15,7 +15,8 @@ async function bootstrap() {
       req.path.startsWith('/api') || req.path.includes('.') ? next() : res.sendFile(join(dist, 'index.html')),
     );
   }
-  await app.listen(3000);
-  console.log('Foreman API on http://localhost:3000');
+  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+  await app.listen(port, "0.0.0.0");
+  console.log(`Foreman API on http://localhost:${port}`);
 }
 void bootstrap();

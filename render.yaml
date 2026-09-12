@@ -1,0 +1,23 @@
+databases:
+  - name: foreman-db
+    plan: free
+    databaseName: foreman
+    user: foreman
+
+services:
+  - type: web
+    name: foreman-management-system
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: "cd frontend && npm ci && npm run build && cd ../backend && npm ci && npm run build"
+    startCommand: "cd backend && npm run start:prod"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: foreman-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: 22.22.0
