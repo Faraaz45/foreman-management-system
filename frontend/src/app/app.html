@@ -1,0 +1,62 @@
+@if (!api.ready()) {
+  <div class="login-wrap"><i class="fas fa-spinner fa-spin"></i></div>
+} @else if (!api.user()) {
+  <div class="login-wrap">
+    <form class="login-box" (ngSubmit)="login()">
+      <h1><i class="fas fa-clipboard-list"></i> Foreman Daily</h1>
+      <div class="form-group"><label>Username</label><input class="form-control" name="u" [(ngModel)]="username" autocomplete="username" placeholder="admin or foreman" /></div>
+      <div class="form-group"><label>Password</label><input class="form-control" type="password" name="p" [(ngModel)]="password" autocomplete="current-password" /></div>
+      @if (loginError) { <div class="login-error">{{ loginError }}</div> }
+      <button class="btn btn-primary" type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+    </form>
+  </div>
+} @else {
+  <div class="container" id="app">
+    <header style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:2px;">
+      <h1><i class="fas fa-clipboard-list"></i> Foreman Daily <small>V2</small></h1>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="text-muted" style="align-self:center;font-size:12px;"><i class="fas fa-user"></i> {{ api.user()?.username }} ({{ api.user()?.role }})</span>
+        @if (api.isAdmin()) {
+          <button class="btn btn-sm btn-outline" (click)="backup()" title="Backup all data"><i class="fas fa-download"></i> Backup</button>
+          <label class="btn btn-sm btn-outline" title="Restore from backup"><i class="fas fa-upload"></i> Restore<input type="file" accept=".json" hidden (change)="restore($event)" /></label>
+        }
+        <button class="btn btn-sm btn-outline" (click)="api.logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist">
+      @for (t of tabs(); track t.id) {
+        <button role="tab" [attr.aria-selected]="api.tab() === t.id" [class.active]="api.tab() === t.id" (click)="api.tab.set(t.id)"><i class="fas" [class]="'fas ' + t.icon"></i> {{ t.label }}</button>
+      }
+    </div>
+
+    <div class="tab-content active" role="tabpanel">
+      @switch (api.tab()) {
+        @case ('dashboard') { <app-dashboard /> }
+        @case ('report') { <app-report /> }
+        @case ('history') { <app-history /> }
+        @case ('admin') { <app-admin /> }
+        @case ('review') { <app-review /> }
+      }
+    </div>
+  </div>
+}
+
+<div class="toast-container">
+  @for (t of api.toasts(); track t.id) {
+    <div class="toast {{ t.type }}"><i class="fas {{ icon(t.type) }}"></i><span>{{ t.msg }}</span><button class="toast-close" (click)="api.dismiss(t.id)">&times;</button></div>
+  }
+</div>
+
+@if (api.confirmState(); as c) {
+  <div class="modal-overlay open" (click)="api.cancelConfirm()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3>{{ c.title }}</h3>
+      <p>{{ c.msg }}</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" (click)="api.cancelConfirm()">Cancel</button>
+        <button class="btn btn-danger" (click)="c.ok()">Confirm</button>
+      </div>
+    </div>
+  </div>
+}
