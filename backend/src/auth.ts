@@ -29,11 +29,12 @@ export class AuthGuard implements CanActivate {
 export class AuthController {
   constructor(private db: DbService) {}
   @Post('login')
-  async login(@Body() b: { username?: string; password?: string }, @Res({ passthrough: true }) res: any) {
+  async login(@Body() b: { username?: string; password?: string }, @Req() req: any, @Res({ passthrough: true }) res: any) {
     const { rows } = await this.db.q('SELECT * FROM users WHERE username=$1', [String(b?.username || '').trim()]);
     if (!rows[0] || !this.db.checkPw(String(b?.password || ''), rows[0].password_hash)) throw new UnauthorizedException('Invalid credentials');
     const user: User = { username: rows[0].username, role: rows[0].role };
-    res.cookie('sid', sign(Buffer.from(JSON.stringify(user)).toString('base64url')), { httpOnly: true, sameSite: 'lax', path: '/' });
+    // secure:true when served over HTTPS (Render, or anything behind app.set('trust proxy', 1)); plain http in local dev still works.
+    res.cookie('sid', sign(Buffer.from(JSON.stringify(user)).toString('base64url')), { httpOnly: true, sameSite: 'lax', path: '/', secure: req.secure });
     return user;
   }
   @Post('logout')
